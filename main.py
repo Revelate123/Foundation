@@ -38,21 +38,8 @@ def service_bearing():
     #TODO: check if element passes service bearing check
     return
 
-def sliding():
-    #TODO: check if element passes sliding check
-    return
-
-def main():
-    #TODO take user inputs
-    allowable = get_int("Input allowable end bearing pressure in kPa: ")
-    width = get_int("Input set width in metres or type N: ")
-
-    print(allowable)
-
-
-    #TODO Add user inputs into database
-
-    #TODO Check pad footing
+def sliding(V,M,N,width, depth):
+    #TODO: check if element passes sliding check per m length
     return
 
 
