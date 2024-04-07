@@ -136,5 +136,82 @@ def pad_footing(SLS,ULS,Dimensions,allowable_end_pressure,density_concrete,overb
 
 #pad_footing(SLS,ULS,Dimensions,allowable_end_pressure,density_concrete,overburden,Friction_angle,cohesion)
 
-if __name__ == "__main__":
-    main()
+#grillage of piles, each pile coordiante defined as tuple (x,y)
+
+# x spacing, y spacing, number of piles in x direction, number of piles in y direction
+
+def pile_grillage(x_spacing, y_spacing, x_rows, y_rows):
+    #2D array of pile locations outer = y inner = x
+    locations = [[[0] for i in range(y_rows)]for j in range(x_rows)]
+    x_location = 0
+
+    for x in range(x_rows):
+        y_location = 0
+        for y in range(y_rows):
+            locations[x][y] = [x_location,y_location]
+            y_location += y_spacing
+        x_location += x_spacing
+    return locations
+
+
+def pile_actions(locations, x_rows, y_rows, Mx, My, Mz, Vx, Vy, N):
+    x_sum = 0
+    y_sum = 0
+    count = 0
+    for x in range(x_rows):
+        for y in range(y_rows):
+            x_sum += locations[x][y][0]
+            y_sum += locations[x][y][1]
+            count += 1
+    x_centroid = x_sum/count
+    y_centroid = y_sum/count
+
+    Icx = 0
+    Icy = 0
+    x_max = 0
+    y_max = 0
+    max_distance = 0
+    for x in range(x_rows):
+        for y in range(y_rows):
+            Icy += (locations[x][y][0] - x_centroid)**2
+            Icx += (locations[x][y][1] - y_centroid)**2
+            polar_dist = math.sqrt((locations[x][y][0] - x_centroid)**2 + (locations[x][y][1] - y_centroid)**2)
+            if polar_dist > max_distance:
+                max_distance = polar_dist
+                theta = math.atan((locations[x][y][1] - y_centroid)/(locations[x][y][0] - x_centroid))
+            if abs(locations[x][y][0] - x_centroid) > x_max:
+                x_max = abs(locations[x][y][0] - x_centroid)
+            if abs(locations[x][y][1] - y_centroid) > y_max:
+                y_max = abs(locations[x][y][1] - y_centroid)
+    Icp = Icx + Icy
+    Pmxy = Mz * max_distance / Icp *1000
+    Pmx = Pmxy * math.sin(theta)
+    Pmy = Pmxy * math.cos(theta)
+    max_shear_force = math.sqrt((Vx/count + Pmx)**2 + (Vy/count + Pmy)**2)
+
+    #Determine max axial force as well.
+
+    Pzmy = My*x_max/Icy *1000
+    Pzmx = Mx*y_max/Icx * 1000
+
+    print("Max Shear : ",round(max_shear_force,2))
+    print("Axial : ", Pzmx + Pzmy + N/count)
+    return max_shear_force, Pzmy, Pzmx
+#Values for Lift/Stair core with screw piles.
+x_rows = 6
+y_rows = 3
+locations = pile_grillage(2200,2200,x_rows,y_rows)
+
+pile_actions(locations, x_rows, y_rows, 7500,6340, 2450, 800, 950, 3000)
+
+#Values for Lift/Stair core with CFA piles.
+x_rows = 4
+y_rows = 2
+locations = pile_grillage(2800,2800,x_rows,y_rows)
+
+pile_actions(locations, x_rows, y_rows, 7500,6340, 2450, 800, 950, 3000)
+
+
+#Values for Lift
+
+#Values for Stair
